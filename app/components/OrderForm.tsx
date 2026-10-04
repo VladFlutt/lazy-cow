@@ -37,7 +37,9 @@ export default function OrderForm({ onClose }: { onClose: () => void }) {
           product: formData.product,
           quantity: formData.quantity,
           color: formData.color,
-          message: formData.message
+          message: formData.message,
+          customerEmail: formData.email,
+          isAdmin: false
         })
       });
 
