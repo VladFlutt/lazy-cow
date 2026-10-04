@@ -9,6 +9,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  let dbStatus: any = null;
+
   try {
     const body = await req.json();
     const { to, subject, name, product, quantity, color, message, customerEmail, isAdmin } = body;
@@ -61,12 +63,16 @@ export async function POST(req: NextRequest) {
           );
 
           console.log('[DB] Response status:', supabaseResponse.status);
+          dbStatus = { status: supabaseResponse.status, ok: supabaseResponse.ok };
 
           if (supabaseResponse.ok) {
             console.log('[DB SUCCESS] Order saved for', customerEmail);
+            dbStatus.success = true;
           } else {
             const errorText = await supabaseResponse.text();
             console.error('[DB FAIL] Status:', supabaseResponse.status, 'Error:', errorText);
+            dbStatus.error = errorText;
+            dbStatus.success = false;
           }
         } catch (dbError) {
           console.error('[DB EXCEPTION]', String(dbError));
@@ -134,10 +140,13 @@ export async function POST(req: NextRequest) {
     // Log email for debugging (can be viewed in server logs)
     console.log(`[ORDER EMAIL SENT] To: ${to}, Subject: ${subject}, Customer: ${name}`);
 
-    return NextResponse.json(
-      { success: true, message: 'Order received! We\'ll contact you soon.' },
-      { status: 200 }
-    );
+    const responseBody: any = {
+      success: true,
+      message: 'Order received! We\'ll contact you soon.',
+      _debug: { dbStatus }
+    };
+
+    return NextResponse.json(responseBody, { status: 200 });
   } catch (error) {
     console.error('Error processing email:', error);
     return NextResponse.json(
