@@ -12,6 +12,16 @@ export async function POST(req: NextRequest) {
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
         const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+        console.log('Supabase config check:', {
+          hasUrl: !!supabaseUrl,
+          hasKey: !!supabaseKey,
+          url: supabaseUrl
+        });
+
+        if (!supabaseUrl || !supabaseKey) {
+          console.error('Missing Supabase credentials');
+        }
+
         const orderData = {
           name,
           email: customerEmail,
@@ -36,9 +46,11 @@ export async function POST(req: NextRequest) {
           }
         );
 
+        console.log('Supabase response status:', supabaseResponse.status);
+
         if (!supabaseResponse.ok) {
           const error = await supabaseResponse.text();
-          console.error('Supabase save error:', error);
+          console.error('Supabase save error (status', supabaseResponse.status, '):', error);
         } else {
           console.log('Order saved to Supabase successfully');
         }
