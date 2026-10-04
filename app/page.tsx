@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import Header from '@/components/Header';
-import Hero from '@/components/Hero';
-import Products from '@/components/Products';
-import OrderForm from '@/components/OrderForm';
-import Footer from '@/components/Footer';
+import Header from './components/Header';
+import Hero from './components/Hero';
+import Products from './components/Products';
+import OrderForm from './components/OrderForm';
+import Footer from './components/Footer';
 
 export default function Home() {
   const [showOrderForm, setShowOrderForm] = useState(false);
