@@ -9,42 +9,16 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  let dbStatus: any = null;
-
   try {
     const body = await req.json();
     const { to, subject, name, product, quantity, color, message, customerEmail, isAdmin } = body;
-
-    console.log('=== REQUEST RECEIVED ===');
-    console.log('Full body:', JSON.stringify(body));
-    console.log('isAdmin:', isAdmin, 'typeof:', typeof isAdmin);
-    console.log('customerEmail:', customerEmail, 'typeof:', typeof customerEmail);
-    console.log('product:', product, 'typeof:', typeof product);
-    console.log('Condition check: !isAdmin=', !isAdmin, ' && customerEmail=', !!customerEmail, ' && product=', !!product);
 
     // Save order to Supabase for customer orders (non-admin)
     if (!isAdmin) {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-      console.log('[DB] Attempting save:', {
-        hasUrl: !!supabaseUrl,
-        hasKey: !!supabaseKey,
-        name,
-        customerEmail,
-        product,
-        allConditions: {
-          url: !!supabaseUrl,
-          key: !!supabaseKey,
-          name: !!name,
-          email: !!customerEmail,
-          product: !!product,
-          allPresent: !!(supabaseUrl && supabaseKey && name && customerEmail && product)
-        }
-      });
-
       if (supabaseUrl && supabaseKey && name && customerEmail && product) {
-        dbStatus = { attempting: true };
         try {
           const orderData: any = {
             name,
@@ -56,49 +30,18 @@ export async function POST(req: NextRequest) {
           if (color) orderData.color = color;
           if (message) orderData.message = message;
 
-          console.log('[DB] Fetching:', `${supabaseUrl}/rest/v1/orders`);
-
-          const supabaseResponse = await fetch(
-            `${supabaseUrl}/rest/v1/orders`,
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'apikey': supabaseKey,
-                'Prefer': 'return=minimal'
-              },
-              body: JSON.stringify(orderData)
-            }
-          );
-
-          console.log('[DB] Response status:', supabaseResponse.status);
-          console.log('[DB] Response ok:', supabaseResponse.ok);
-
-          try {
-            let errorText = '';
-            if (!supabaseResponse.ok) {
-              errorText = await supabaseResponse.text();
-              console.error('[DB FAIL] Status:', supabaseResponse.status, 'Error:', errorText);
-            } else {
-              console.log('[DB SUCCESS] Order saved');
-            }
-
-            dbStatus = {
-              status: supabaseResponse.status,
-              ok: supabaseResponse.ok,
-              success: supabaseResponse.ok,
-              error: errorText
-            };
-          } catch (parseErr) {
-            console.error('[DB PARSE ERROR]', String(parseErr));
-            dbStatus = { parseError: String(parseErr), originalStatus: supabaseResponse.status };
-          }
+          await fetch(`${supabaseUrl}/rest/v1/orders`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': supabaseKey,
+              'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify(orderData)
+          });
         } catch (dbError) {
-          console.error('[DB EXCEPTION]', String(dbError));
-          dbStatus = { exception: String(dbError) };
+          console.error('[Order Save Error]', String(dbError));
         }
-      } else {
-        console.log('[DB SKIP] Conditions not met');
       }
     }
 
@@ -162,23 +105,7 @@ export async function POST(req: NextRequest) {
 
     const responseBody: any = {
       success: true,
-      message: 'Order received! We\'ll contact you soon.',
-      _debug: {
-        dbStatus,
-        envCheck: {
-          hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-          hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-          hasName: !!name,
-          hasCustomerEmail: !!customerEmail,
-          hasProduct: !!product,
-          isAdmin
-        },
-        actualValues: {
-          name,
-          customerEmail,
-          product
-        }
-      }
+      message: 'Order received! We\'ll contact you soon.'
     };
 
     return NextResponse.json(responseBody, { status: 200 });
