@@ -27,14 +27,16 @@ export default function OrderForm({ onClose }: { onClose: () => void }) {
 
     try {
       // Save to Supabase via REST API
+      const apiKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/orders`,
+        `${url}/rest/v1/orders`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
-            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''}`
+            'apikey': apiKey || ''
           },
           body: JSON.stringify({
             name: formData.name,
@@ -48,6 +50,8 @@ export default function OrderForm({ onClose }: { onClose: () => void }) {
       );
 
       if (!response.ok) {
+        const error = await response.text();
+        console.error('Supabase error:', error);
         throw new Error(`Failed to submit order: ${response.status}`);
       }
 
