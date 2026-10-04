@@ -152,7 +152,22 @@ export async function POST(req: NextRequest) {
     const responseBody: any = {
       success: true,
       message: 'Order received! We\'ll contact you soon.',
-      _debug: { dbStatus }
+      _debug: {
+        dbStatus,
+        envCheck: {
+          hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+          hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+          hasName: !!name,
+          hasCustomerEmail: !!customerEmail,
+          hasProduct: !!product,
+          isAdmin
+        },
+        actualValues: {
+          name,
+          customerEmail,
+          product
+        }
+      }
     };
 
     return NextResponse.json(responseBody, { status: 200 });
