@@ -26,32 +26,21 @@ export default function OrderForm({ onClose }: { onClose: () => void }) {
     setLoading(true);
 
     try {
-      // Save to Supabase via REST API
-      const apiKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-      const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-
-      const response = await fetch(
-        `${url}/rest/v1/orders`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': apiKey || ''
-          },
-          body: JSON.stringify({
-            name: formData.name,
-            email: formData.email,
-            product: formData.product,
-            quantity: parseInt(formData.quantity),
-            color: formData.color,
-            message: formData.message
-          })
-        }
-      );
+      // Save via backend API endpoint
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          product: formData.product,
+          quantity: parseInt(formData.quantity),
+          color: formData.color,
+          message: formData.message
+        })
+      });
 
       if (!response.ok) {
-        const error = await response.text();
-        console.error('Supabase error:', error);
         throw new Error(`Failed to submit order: ${response.status}`);
       }
 
