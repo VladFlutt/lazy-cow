@@ -32,10 +32,19 @@ export async function POST(req: NextRequest) {
         hasKey: !!supabaseKey,
         name,
         customerEmail,
-        product
+        product,
+        allConditions: {
+          url: !!supabaseUrl,
+          key: !!supabaseKey,
+          name: !!name,
+          email: !!customerEmail,
+          product: !!product,
+          allPresent: !!(supabaseUrl && supabaseKey && name && customerEmail && product)
+        }
       });
 
       if (supabaseUrl && supabaseKey && name && customerEmail && product) {
+        dbStatus = { attempting: true };
         try {
           const orderData: any = {
             name,
