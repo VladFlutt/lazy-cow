@@ -4,7 +4,48 @@ export async function POST(req: NextRequest) {
   try {
     const { to, subject, name, product, quantity, color, message, customerEmail, isAdmin } = await req.json();
 
-    console.log('Email notification:', { to, subject, name, product, quantity });
+    console.log('Processing order:', { to, subject, name, product, quantity });
+
+    // Save order to Supabase if not an admin email
+    if (!isAdmin && customerEmail && product) {
+      try {
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+        const orderData = {
+          name,
+          email: customerEmail,
+          product,
+          quantity: parseInt(quantity) || 1,
+          color: color || null,
+          message: message || null
+        };
+
+        console.log('Saving to Supabase:', orderData);
+
+        const supabaseResponse = await fetch(
+          `${supabaseUrl}/rest/v1/orders`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': supabaseKey || '',
+              'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify(orderData)
+          }
+        );
+
+        if (!supabaseResponse.ok) {
+          const error = await supabaseResponse.text();
+          console.error('Supabase save error:', error);
+        } else {
+          console.log('Order saved to Supabase successfully');
+        }
+      } catch (dbError) {
+        console.error('Supabase error:', dbError);
+      }
+    }
 
     // Build email body based on recipient
     let emailBody: string;
