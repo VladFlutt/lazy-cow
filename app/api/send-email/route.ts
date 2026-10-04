@@ -2,9 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
   try {
-    const { to, subject, name, product, quantity, color, message, customerEmail, isAdmin } = await req.json();
+    const body = await req.json();
+    const { to, subject, name, product, quantity, color, message, customerEmail, isAdmin } = body;
 
-    console.log('Processing order:', { to, subject, name, product, quantity, customerEmail, isAdmin });
+    console.log('=== REQUEST RECEIVED ===');
+    console.log('Full body:', JSON.stringify(body));
+    console.log('isAdmin:', isAdmin, 'typeof:', typeof isAdmin);
+    console.log('customerEmail:', customerEmail, 'typeof:', typeof customerEmail);
+    console.log('product:', product, 'typeof:', typeof product);
+    console.log('Condition check: !isAdmin=', !isAdmin, ' && customerEmail=', !!customerEmail, ' && product=', !!product);
 
     // Save order to Supabase if not an admin email
     if (!isAdmin && customerEmail && product) {
