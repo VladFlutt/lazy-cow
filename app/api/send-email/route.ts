@@ -35,14 +35,15 @@ export async function POST(req: NextRequest) {
 
       if (supabaseUrl && supabaseKey && name && customerEmail && product) {
         try {
-          const orderData = {
+          const orderData: any = {
             name,
             email: customerEmail,
             product,
-            quantity: parseInt(quantity) || 1,
-            color: color || null,
-            message: message || null
+            quantity: parseInt(quantity) || 1
           };
+
+          if (color) orderData.color = color;
+          if (message) orderData.message = message;
 
           console.log('[DB] Fetching:', `${supabaseUrl}/rest/v1/orders`);
 
