@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export async function GET() {
+  return NextResponse.json({
+    hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+    hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    url: process.env.NEXT_PUBLIC_SUPABASE_URL || 'NOT SET'
+  });
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
