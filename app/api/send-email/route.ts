@@ -4,10 +4,11 @@ export async function POST(req: NextRequest) {
   try {
     const { to, subject, name, product, quantity, color, message, customerEmail, isAdmin } = await req.json();
 
-    console.log('Processing order:', { to, subject, name, product, quantity });
+    console.log('Processing order:', { to, subject, name, product, quantity, customerEmail, isAdmin });
 
     // Save order to Supabase if not an admin email
     if (!isAdmin && customerEmail && product) {
+      console.log('*** SUPABASE SAVE TRIGGERED ***');
       try {
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
         const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
