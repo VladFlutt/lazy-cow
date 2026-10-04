@@ -12,57 +12,43 @@ export async function POST(req: NextRequest) {
     console.log('product:', product, 'typeof:', typeof product);
     console.log('Condition check: !isAdmin=', !isAdmin, ' && customerEmail=', !!customerEmail, ' && product=', !!product);
 
-    // Save order to Supabase if not an admin email
-    if (!isAdmin && customerEmail && product) {
-      console.log('*** SUPABASE SAVE TRIGGERED ***');
+    // Save order to Supabase for customer orders (non-admin)
+    if (!isAdmin) {
       try {
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
         const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-        console.log('Supabase config check:', {
-          hasUrl: !!supabaseUrl,
-          hasKey: !!supabaseKey,
-          url: supabaseUrl
-        });
+        if (supabaseUrl && supabaseKey && name && customerEmail && product) {
+          const orderData = {
+            name,
+            email: customerEmail,
+            product,
+            quantity: parseInt(quantity) || 1,
+            color: color || null,
+            message: message || null
+          };
 
-        if (!supabaseUrl || !supabaseKey) {
-          console.error('Missing Supabase credentials');
-        }
+          const supabaseResponse = await fetch(
+            `${supabaseUrl}/rest/v1/orders`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'apikey': supabaseKey,
+                'Prefer': 'return=minimal'
+              },
+              body: JSON.stringify(orderData)
+            }
+          );
 
-        const orderData = {
-          name,
-          email: customerEmail,
-          product,
-          quantity: parseInt(quantity) || 1,
-          color: color || null,
-          message: message || null
-        };
-
-        console.log('Saving to Supabase:', orderData);
-
-        const supabaseResponse = await fetch(
-          `${supabaseUrl}/rest/v1/orders`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': supabaseKey || '',
-              'Prefer': 'return=minimal'
-            },
-            body: JSON.stringify(orderData)
+          if (supabaseResponse.ok) {
+            console.log('[SUPABASE SAVED] Order saved for', customerEmail);
+          } else {
+            console.error('[SUPABASE ERROR]', supabaseResponse.status, await supabaseResponse.text());
           }
-        );
-
-        console.log('Supabase response status:', supabaseResponse.status);
-
-        if (!supabaseResponse.ok) {
-          const error = await supabaseResponse.text();
-          console.error('Supabase save error (status', supabaseResponse.status, '):', error);
-        } else {
-          console.log('Order saved to Supabase successfully');
         }
       } catch (dbError) {
-        console.error('Supabase error:', dbError);
+        console.error('[SUPABASE EXCEPTION]', dbError);
       }
     }
 
