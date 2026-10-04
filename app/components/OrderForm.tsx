@@ -1,12 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-);
 
 const products = ['Classic Belt', 'Leather Wallet', 'Crossbody Bag', 'Tote Bag', 'Dress Belt', 'Card Holder'];
 
@@ -32,22 +26,30 @@ export default function OrderForm({ onClose }: { onClose: () => void }) {
     setLoading(true);
 
     try {
-      // Save to Supabase
-      const { error } = await supabase
-        .from('orders')
-        .insert([
-          {
+      // Save to Supabase via REST API
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/orders`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''}`
+          },
+          body: JSON.stringify({
             name: formData.name,
             email: formData.email,
             product: formData.product,
             quantity: parseInt(formData.quantity),
             color: formData.color,
-            message: formData.message,
-            created_at: new Date().toISOString()
-          }
-        ]);
+            message: formData.message
+          })
+        }
+      );
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error(`Failed to submit order: ${response.status}`);
+      }
 
       // Send email notification
       await fetch('/api/send-email', {
