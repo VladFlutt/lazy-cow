@@ -26,26 +26,8 @@ export default function OrderForm({ onClose }: { onClose: () => void }) {
     setLoading(true);
 
     try {
-      // Save via backend API endpoint
-      const response = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          product: formData.product,
-          quantity: parseInt(formData.quantity),
-          color: formData.color,
-          message: formData.message
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to submit order: ${response.status}`);
-      }
-
-      // Send email notification
-      await fetch('/api/send-email', {
+      // Send order confirmation email to customer
+      const customerEmailResponse = await fetch('/api/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -53,7 +35,30 @@ export default function OrderForm({ onClose }: { onClose: () => void }) {
           subject: 'Order Confirmation - Lazy Cow Studio',
           name: formData.name,
           product: formData.product,
-          quantity: formData.quantity
+          quantity: formData.quantity,
+          color: formData.color,
+          message: formData.message
+        })
+      });
+
+      if (!customerEmailResponse.ok) {
+        throw new Error('Failed to send confirmation email');
+      }
+
+      // Send order notification email to admin
+      await fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: 'hello@lazycow.com',
+          subject: 'New Order Received - Lazy Cow Studio',
+          name: formData.name,
+          product: formData.product,
+          quantity: formData.quantity,
+          color: formData.color,
+          message: formData.message,
+          customerEmail: formData.email,
+          isAdmin: true
         })
       });
 
