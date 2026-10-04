@@ -72,19 +72,30 @@ export async function POST(req: NextRequest) {
           );
 
           console.log('[DB] Response status:', supabaseResponse.status);
-          dbStatus = { status: supabaseResponse.status, ok: supabaseResponse.ok };
+          console.log('[DB] Response ok:', supabaseResponse.ok);
 
-          if (supabaseResponse.ok) {
-            console.log('[DB SUCCESS] Order saved for', customerEmail);
-            dbStatus.success = true;
-          } else {
-            const errorText = await supabaseResponse.text();
-            console.error('[DB FAIL] Status:', supabaseResponse.status, 'Error:', errorText);
-            dbStatus.error = errorText;
-            dbStatus.success = false;
+          try {
+            let errorText = '';
+            if (!supabaseResponse.ok) {
+              errorText = await supabaseResponse.text();
+              console.error('[DB FAIL] Status:', supabaseResponse.status, 'Error:', errorText);
+            } else {
+              console.log('[DB SUCCESS] Order saved');
+            }
+
+            dbStatus = {
+              status: supabaseResponse.status,
+              ok: supabaseResponse.ok,
+              success: supabaseResponse.ok,
+              error: errorText
+            };
+          } catch (parseErr) {
+            console.error('[DB PARSE ERROR]', String(parseErr));
+            dbStatus = { parseError: String(parseErr), originalStatus: supabaseResponse.status };
           }
         } catch (dbError) {
           console.error('[DB EXCEPTION]', String(dbError));
+          dbStatus = { exception: String(dbError) };
         }
       } else {
         console.log('[DB SKIP] Conditions not met');
