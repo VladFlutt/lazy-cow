@@ -22,11 +22,19 @@ export async function POST(req: NextRequest) {
 
     // Save order to Supabase for customer orders (non-admin)
     if (!isAdmin) {
-      try {
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-        if (supabaseUrl && supabaseKey && name && customerEmail && product) {
+      console.log('[DB] Attempting save:', {
+        hasUrl: !!supabaseUrl,
+        hasKey: !!supabaseKey,
+        name,
+        customerEmail,
+        product
+      });
+
+      if (supabaseUrl && supabaseKey && name && customerEmail && product) {
+        try {
           const orderData = {
             name,
             email: customerEmail,
@@ -35,6 +43,8 @@ export async function POST(req: NextRequest) {
             color: color || null,
             message: message || null
           };
+
+          console.log('[DB] Fetching:', `${supabaseUrl}/rest/v1/orders`);
 
           const supabaseResponse = await fetch(
             `${supabaseUrl}/rest/v1/orders`,
@@ -49,14 +59,19 @@ export async function POST(req: NextRequest) {
             }
           );
 
+          console.log('[DB] Response status:', supabaseResponse.status);
+
           if (supabaseResponse.ok) {
-            console.log('[SUPABASE SAVED] Order saved for', customerEmail);
+            console.log('[DB SUCCESS] Order saved for', customerEmail);
           } else {
-            console.error('[SUPABASE ERROR]', supabaseResponse.status, await supabaseResponse.text());
+            const errorText = await supabaseResponse.text();
+            console.error('[DB FAIL] Status:', supabaseResponse.status, 'Error:', errorText);
           }
+        } catch (dbError) {
+          console.error('[DB EXCEPTION]', String(dbError));
         }
-      } catch (dbError) {
-        console.error('[SUPABASE EXCEPTION]', dbError);
+      } else {
+        console.log('[DB SKIP] Conditions not met');
       }
     }
 
